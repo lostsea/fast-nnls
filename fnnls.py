@@ -1,7 +1,10 @@
 import numpy as np
 
 
-def fnnls(A, y, epsilon=1e-5):
+def fnnls(A, y, epsilon=None):
+    if epsilon is None:
+        epsilon = np.finfo(np.float64).eps
+        
     m, n = A.shape
     if y.ndim != 1 or y.shape[0] != m:
         raise ValueError('Invalid dimension; got y vector of size {}, ' \
