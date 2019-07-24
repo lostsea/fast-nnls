@@ -14,43 +14,60 @@ def fnnls(A, y, epsilon=1e-5):
     # If sets[j] is 0, then index j is in the active set (R in literature).
     # Else, it is in the passive set (P).
     sets = np.zeros(n, dtype=np.bool)
+    # The set of all possible indices. Construct P, R by using `sets` as a mask
+    ind = np.arange(n, dtype=int)
+    P = ind[sets]
+    R = ind[~sets]
 
     x = np.zeros(n, dtype=np.float64)
     w = Aty
     s = np.zeros(n, dtype=np.float64)
 
     # While R not empty and max_(n \in R) w_n > epsilon
-    while not np.all(sets) and np.max(w[~sets]) > epsilon:
+    while not np.all(sets) and np.max(w[R]) > epsilon:
         # Find index of maximum element of w which is in active set.
-        j = np.argmax(w[~sets])
+        j = np.argmax(w[R])
         # We have the index in MASKED w.
-        # We therefore want the j-th zero in `sets`.
-        m = np.where(sets == 0)[0][j]
+        # The real index is stored in the j-th position of R.
+        m = R[j]
 
         # Move index from active set to passive set.
         sets[m] = True
+        P = ind[sets]
+        R = ind[~sets]
 
         # Get the rows, cols in AtA corresponding to P
-        AtA_in_p = AtA[sets][:, sets]
+        AtA_in_p = AtA[P][:, P]
         # Do the same for Aty
-        Aty_in_p = Aty[sets]
+        Aty_in_p = Aty[P]
 
         # Update s. Solve (AtA)^p * s^p = (Aty)^p
-        s[sets] = np.linalg.lstsq(AtA_in_p, Aty_in_p, rcond=None)[0]
-        s[~sets] = 0.
+        s[P] = np.linalg.lstsq(AtA_in_p, Aty_in_p, rcond=None)[0]
+        s[R] = 0.
 
-        while np.min(s[sets]) <= 0:
-            mask = (s[sets] <= 0)
-            alpha = np.min(x[sets][mask] / (x[sets][mask] - s[sets][mask]))
+        while np.min(s[P]) <= 0:
+            mask = (s[P] <= 0)
+            alpha = np.min(x[P][mask] / (x[P][mask] - s[P][mask]))
             x += alpha * (s - x)
 
             # Move all indices j in P such that x[j] = 0 to R
-            x_zeros = np.where(x == 0)[0][sets]
-            sets[x_zeros] = False
+            # First get all indices where x == 0 in the MASKED x
+            zero_mask = (x[P] < epsilon)
+            # These correspond to indices in P
+            zeros = P[zero_mask]
+            # Finally, update the passive/active sets.
+            sets[zeros] = False
+            P = ind[sets]
+            R = ind[~sets]
+            
+            # Get the rows, cols in AtA corresponding to P
+            AtA_in_p = AtA[P][:, P]
+            # Do the same for Aty
+            Aty_in_p = Aty[P]
 
             # Update s. Solve (AtA)^p * s^p = (Aty)^p
-            s[sets] = np.linalg.lstsq(AtA_in_p, Aty_in_p, rcond=None)[0]
-            s[~sets] = 0.
+            s[P] = np.linalg.lstsq(AtA_in_p, Aty_in_p, rcond=None)[0]
+            s[R] = 0.
 
         x = s
         w = Aty - AtA.dot(x)
