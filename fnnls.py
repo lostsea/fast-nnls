@@ -45,8 +45,8 @@ def fnnls(A, y, epsilon=1e-5):
         s[P] = np.linalg.lstsq(AtA_in_p, Aty_in_p, rcond=None)[0]
         s[R] = 0.
 
-        while np.min(s[P]) <= 0 and not np.all(sets):
-            mask = (s[P] <= 0)
+        while np.min(s[P]) <= epsilon:
+            mask = (s[P] <= epsilon)
             alpha = np.min(x[P][mask] / (x[P][mask] - s[P][mask]))
             x += alpha * (s - x)
 
