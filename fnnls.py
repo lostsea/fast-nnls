@@ -59,7 +59,7 @@ def fnnls(A, y, epsilon=1e-5):
             sets[zeros] = False
             P = ind[sets]
             R = ind[~sets]
-            
+
             # Get the rows, cols in AtA corresponding to P
             AtA_in_p = AtA[P][:, P]
             # Do the same for Aty
@@ -69,7 +69,7 @@ def fnnls(A, y, epsilon=1e-5):
             s[P] = np.linalg.lstsq(AtA_in_p, Aty_in_p, rcond=None)[0]
             s[R] = 0.
 
-        x = s
+        x = s.copy()
         w = Aty - AtA.dot(x)
 
     return x
