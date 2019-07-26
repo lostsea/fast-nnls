@@ -2,6 +2,32 @@ import numpy as np
 
 
 def fnnls(AtA, Aty, epsilon=None):
+    """
+    Given a matrix A and vector y, find x which minimizes the objective function
+    f(x) = ||Ax - y||^2.
+    This algorithm is similar to the widespread Lawson-Hanson method, but
+    implements the optimizations described in the paper
+    "A Fast Non-Negativity-Constrained Least Squares Algorithm" by
+    Rasmus Bro and Sumen De Jong.
+
+    Note that the inputs are not A and y, but are
+    A^T * A and A^T * y
+
+    This is to avoid incurring the overhead of computing these products
+    many times in cases where we need to call this routine many times.
+
+    :param AtA:     A^T * A. See above for definitions. If A is an (m x n)
+                    matrix, this should be an (n x n) matrix.
+    :type AtA:      numpy.ndarray
+    :param Aty:     A^T * y. See above for definitions. If A is an (m x n)
+                    matrix and y is an m dimensional vector, this should be an n
+                    dimensional vector.
+    :type Aty:      numpy.ndarray
+    :param epsilon: Anything less than this value is consider 0 in the code.
+                    Use this to prevent issues with floating point precision.
+                    Defaults to the machine precision for doubles.
+    :type epsilon:  float
+    """
     if epsilon is None:
         epsilon = np.finfo(np.float64).eps
 
