@@ -27,3 +27,6 @@ AtA = A.T.dot(A)
 Aty = A.T.dot(y)
 x = fnnls(AtA, Aty)
 ```
+
+## Testing
+Install `fastnnls` then run `python tests/test.py`.
