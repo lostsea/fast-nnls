@@ -1,17 +1,14 @@
 import numpy as np
 
 
-def fnnls(A, y, epsilon=None):
+def fnnls(AtA, Aty, epsilon=None):
     if epsilon is None:
         epsilon = np.finfo(np.float64).eps
-        
-    m, n = A.shape
-    if y.ndim != 1 or y.shape[0] != m:
-        raise ValueError('Invalid dimension; got y vector of size {}, ' \
-                         'expected {}'.format(y.shape, m))
 
-    AtA = A.T.dot(A)
-    Aty = A.T.dot(y)
+    n = AtA.shape[0]
+    if Aty.ndim != 1 or Aty.shape[0] != n:
+        raise ValueError('Invalid dimension; got Aty vector of size {}, ' \
+                         'expected {}'.format(Aty.shape, n))
 
     # Represents passive and active sets.
     # If sets[j] is 0, then index j is in the active set (R in literature).
