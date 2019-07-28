@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def fnnls(AtA, Aty, epsilon=None):
+def fnnls(AtA, Aty, epsilon=None, iter_max=None):
     """
     Given a matrix A and vector y, find x which minimizes the objective function
     f(x) = ||Ax - y||^2.
@@ -16,22 +16,30 @@ def fnnls(AtA, Aty, epsilon=None):
     This is to avoid incurring the overhead of computing these products
     many times in cases where we need to call this routine many times.
 
-    :param AtA:     A^T * A. See above for definitions. If A is an (m x n)
-                    matrix, this should be an (n x n) matrix.
-    :type AtA:      numpy.ndarray
-    :param Aty:     A^T * y. See above for definitions. If A is an (m x n)
-                    matrix and y is an m dimensional vector, this should be an n
-                    dimensional vector.
-    :type Aty:      numpy.ndarray
-    :param epsilon: Anything less than this value is consider 0 in the code.
-                    Use this to prevent issues with floating point precision.
-                    Defaults to the machine precision for doubles.
-    :type epsilon:  float
+    :param AtA:       A^T * A. See above for definitions. If A is an (m x n)
+                      matrix, this should be an (n x n) matrix.
+    :type AtA:        numpy.ndarray
+    :param Aty:       A^T * y. See above for definitions. If A is an (m x n)
+                      matrix and y is an m dimensional vector, this should be an
+                      n dimensional vector.
+    :type Aty:        numpy.ndarray
+    :param epsilon:   Anything less than this value is consider 0 in the code.
+                      Use this to prevent issues with floating point precision.
+                      Defaults to the machine precision for doubles.
+    :type epsilon:    float
+    :param iter_max:  Maximum number of inner loop iterations. Defaults to
+                      30 * [number of cols in A] (the same value that is used
+                      in the publication this algorithm comes from).
+    :type iter_max:   int, optional
     """
     if epsilon is None:
         epsilon = np.finfo(np.float64).eps
 
     n = AtA.shape[0]
+
+    if iter_max is None:
+        iter_max = 30 * n
+
     if Aty.ndim != 1 or Aty.shape[0] != n:
         raise ValueError('Invalid dimension; got Aty vector of size {}, ' \
                          'expected {}'.format(Aty.shape, n))
@@ -49,8 +57,9 @@ def fnnls(AtA, Aty, epsilon=None):
     w = Aty
     s = np.zeros(n, dtype=np.float64)
 
+    i = 0
     # While R not empty and max_(n \in R) w_n > epsilon
-    while not np.all(sets) and np.max(w[R]) > epsilon:
+    while not np.all(sets) and np.max(w[R]) > epsilon and i < iter_max:
         # Find index of maximum element of w which is in active set.
         j = np.argmax(w[R])
         # We have the index in MASKED w.
@@ -72,6 +81,8 @@ def fnnls(AtA, Aty, epsilon=None):
         s[R] = 0.
 
         while np.any(s[P] <= epsilon):
+            i += 1
+
             mask = (s[P] <= epsilon)
             alpha = np.min(x[P][mask] / (x[P][mask] - s[P][mask]))
             x += alpha * (s - x)

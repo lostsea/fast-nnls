@@ -29,4 +29,4 @@ x = fnnls(AtA, Aty)
 ```
 
 ## Testing
-Install `fastnnls` then run `python tests/test.py`.
+Install `fastnnls` then run `python3 tests/test.py`.
